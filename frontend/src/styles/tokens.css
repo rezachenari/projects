@@ -1,0 +1,54 @@
+/* =========================================================
+   Pars Vitrin — Design tokens
+   The palette, rhythm and typographic scale of the maison.
+   ========================================================= */
+:root {
+  /* Obsidian & midnight surfaces */
+  --ink-950: #05070a;
+  --ink-900: #080a0d;
+  --ink-850: #0c1117;
+  --ink-800: #10151b;
+  --ink-700: #171e26;
+
+  /* Aurum series */
+  --gold-500: #d6ad62;
+  --gold-400: #e5c384;
+  --gold-300: #f2d69a;
+  --gold-700: #9c713a;
+
+  /* Warm neutrals */
+  --bone-50: #f7f5f0;
+  --bone-100: #e8e5df;
+  --steel-400: #9298a1;
+  --steel-500: #6f757e;
+
+  --danger: #e57373;
+  --success: #7fb08a;
+
+  /* Lines */
+  --line-gold: rgba(214, 173, 98, 0.24);
+  --line-gold-strong: rgba(214, 173, 98, 0.55);
+  --line-dark: rgba(8, 10, 13, 0.12);
+  --line-light: rgba(247, 245, 240, 0.1);
+
+  /* Typography */
+  --font-fa: 'IRANYekan', 'IRANYekanX', 'Vazirmatn', 'Segoe UI', Tahoma, system-ui, sans-serif;
+
+  /* Rhythm */
+  --container: 1320px;
+  --gutter: clamp(20px, 4.2vw, 56px);
+  --section-y: clamp(64px, 7.2vw, 112px);
+  --header-h: 88px;
+
+  /* Shape & motion */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 700ms;
+
+  --shadow-soft: 0 24px 60px -34px rgba(5, 7, 10, 0.6);
+  --shadow-lift: 0 30px 70px -40px rgba(5, 7, 10, 0.75);
+}

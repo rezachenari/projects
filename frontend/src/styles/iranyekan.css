@@ -1,0 +1,59 @@
+/* =========================================================
+   IRANYekan (brand face) — optional, licensed font files
+   ---------------------------------------------------------
+   The brand face is IRANYekan. Its files are not distributed with this
+   repository, because the licence belongs to the customer. The layout already
+   asks for 'IRANYekan' first in --font-fa, and Vazirmatn is served as the
+   working Persian fallback.
+
+   To activate the brand face:
+   1. Put the licensed files in frontend/public/fonts/iranyekan/
+        IRANYekanX-Light.woff2      (300)
+        IRANYekanX-Regular.woff2    (400)
+        IRANYekanX-Medium.woff2     (500)
+        IRANYekanX-DemiBold.woff2   (600)
+        IRANYekanX-Bold.woff2       (700)
+        IRANYekanX-ExtraBold.woff2  (800)
+   2. Uncomment the block below and import this file from src/main.jsx.
+
+   Nothing claims IRANYekan is installed while the block stays commented out.
+   ========================================================= */
+
+/*
+@font-face {
+  font-family: 'IRANYekanX';
+  src: url('/fonts/iranyekan/IRANYekanX-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekanX';
+  src: url('/fonts/iranyekan/IRANYekanX-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekanX';
+  src: url('/fonts/iranyekan/IRANYekanX-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekanX';
+  src: url('/fonts/iranyekan/IRANYekanX-DemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekanX';
+  src: url('/fonts/iranyekan/IRANYekanX-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'IRANYekanX';
+  src: url('/fonts/iranyekan/IRANYekanX-ExtraBold.woff2') format('woff2');
+  font-weight: 800;
+  font-display: swap;
+}
+*/
