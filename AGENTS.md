@@ -52,6 +52,15 @@ it never drops the `leads` table.
   `frontend/public/images/*.webp` and referenced by path. Never swap in an
   external hotlink — the site must render offline.
 - **No slider in the hero.** That is a hard product rule, not an oversight.
+- **The hero video is scrubbed, not played.** `frontend/src/lib/useScrollVideoScrub.js`
+  maps scroll progress to `video.currentTime` (never `play()`/`pause()`). The hero
+  section is a tall container (stage + `--hero-travel`, 240vh desktop / 200vh ≤900px)
+  holding a `position: sticky` stage; keep `overflow` off that section or sticky breaks.
+  `frontend/public/videos/hero-scrub*.mp4` are **all-intra** re-encodes (every frame a
+  keyframe) so seeking is frame-accurate — do not replace them with a normally encoded
+  file, scrubbing would lag. Regenerate with:
+  `ffmpeg -i source.mp4 -an -vf scale=1280:-2 -c:v libx264 -g 1 -keyint_min 1 -sc_threshold 0 -bf 0 -crf 24 -preset slow -movflags +faststart public/videos/hero-scrub.mp4`
+  (960px/CRF 27 for the mobile file, plus `hero-video-poster.webp` as the still fallback).
 - **Fonts:** `--font-fa` asks for `IRANYekan` first, but the licensed files are
   not in the repo. Vazirmatn (self-hosted in `frontend/public/fonts`) is the
   working face. `src/styles/iranyekan.css` holds the commented `@font-face`

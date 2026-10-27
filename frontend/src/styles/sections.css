@@ -6,25 +6,71 @@
 .hero {
   position: relative;
   isolation: isolate;
-  min-height: clamp(540px, 74vh, 680px);
+  background: var(--ink-900);
+  overflow: hidden;
+}
+
+/* ---------- Scroll-driven hero (video scrubbing) ---------- */
+.hero--scrub {
+  --hero-stage-h: calc(100vh - var(--header-h));
+  --hero-travel: 240vh;
+  display: block;
+  height: calc(var(--hero-stage-h) + var(--hero-travel));
+  min-height: 0;
+  padding: 0;
+  /* Must stay visible: an overflow scroll container here would break `sticky`. */
+  overflow: visible;
+}
+
+@supports (height: 1svh) {
+  .hero--scrub {
+    --hero-stage-h: calc(100svh - var(--header-h));
+  }
+}
+
+.hero__stage {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: flex-end;
+  min-height: clamp(540px, 74vh, 680px);
   padding-block: clamp(3rem, 6vw, 5.5rem);
   background: var(--ink-900);
   overflow: hidden;
+}
+
+.hero--scrub .hero__stage {
+  position: sticky;
+  top: var(--header-h);
+  height: var(--hero-stage-h);
+  min-height: 0;
 }
 
 .hero__media {
   position: absolute;
   inset: 0;
   z-index: -2;
+  overflow: hidden;
 }
 
-.hero__media img {
+.hero__media img,
+.hero__video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: 26% 48%;
+}
+
+.hero__video {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 600ms var(--ease-out);
+}
+
+.hero__video.is-ready {
+  opacity: 1;
 }
 
 .hero__veil {
@@ -1063,11 +1109,20 @@
 
 @media (max-width: 900px) {
   .hero {
+    min-height: 0;
+  }
+
+  .hero--scrub {
+    --hero-travel: 200vh;
+  }
+
+  .hero__stage {
     min-height: clamp(500px, 78vh, 620px);
     align-items: flex-end;
   }
 
-  .hero__media img {
+  .hero__media img,
+  .hero__video {
     object-position: 32% 42%;
   }
 
