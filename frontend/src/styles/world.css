@@ -1,0 +1,565 @@
+/* =========================================================
+   Mister Kebab — the nine cinematic worlds
+   ---------------------------------------------------------
+   One scroll-video engine, nine configurations. Every layer
+   below reads the same `--world-progress` (written on the
+   section by `useScrollVideoScrub`), so the picture is a pure
+   function of the scroll position — down, up and back again.
+   ========================================================= */
+
+.world {
+  position: relative;
+  isolation: isolate;
+  background: var(--char-950);
+
+  /* Scroll distance the sticky stage stays pinned. Set per world inline. */
+  min-height: calc(var(--world-travel, 200vh) + 100svh);
+
+  --p: var(--world-progress, 0);
+
+  /* Scene arrival / departure: the frame resolves out of charcoal on the way
+     in and dissolves back into it on the way out, over the first/last ~6–9 %. */
+  --in: clamp(0, calc(var(--p) * 16), 1);
+  --out: clamp(0, calc((1 - var(--p)) * 11), 1);
+
+  /* Copy stepping: chapter → eyebrow → headline → text → actions → meta.
+     Each step starts a little after the previous one and only ever moves
+     forwards with the scroll, so scrolling back reverses it exactly. */
+  --t1: clamp(0, calc((var(--p) - 0.02) * 16), 1);
+  --t2: clamp(0, calc((var(--p) - 0.05) * 14), 1);
+  --t3: clamp(0, calc((var(--p) - 0.08) * 13), 1);
+  --t4: clamp(0, calc((var(--p) - 0.11) * 12), 1);
+  --t5: clamp(0, calc((var(--p) - 0.14) * 12), 1);
+  --t6: clamp(0, calc((var(--p) - 0.17) * 12), 1);
+}
+
+/* The opening world is on screen before any scrolling: it shows its first
+   frame and its copy straight away. */
+.world[data-entrance='instant'] {
+  --in: 1;
+  --t1: 1;
+  --t2: 1;
+  --t3: 1;
+  --t4: 1;
+  --t5: 1;
+  --t6: 1;
+}
+
+/* ================= STICKY CINEMATIC VIEWPORT ================= */
+.world__stage {
+  position: relative;
+  z-index: 1;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--char-950);
+}
+
+.world--cinema .world__stage {
+  position: sticky;
+  top: 0;
+}
+
+@media (min-width: 901px) {
+  .world__stage {
+    height: 100vh;
+  }
+}
+
+/* ---------- video layer ---------- */
+.world__scene {
+  position: absolute;
+  inset: 0;
+  opacity: calc(var(--in) * var(--out));
+  transform: scale(calc(1 + 0.055 * (1 - var(--in)) + 0.03 * (1 - var(--out))));
+  filter: brightness(calc(0.72 + 0.28 * var(--in)));
+  transform-origin: 50% 56%;
+  will-change: opacity, transform;
+}
+
+.world__poster,
+.world__el {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--world-focus, 50% 50%);
+}
+
+.world__el {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 620ms var(--ease-out);
+}
+
+.world__el.is-ready {
+  opacity: 1;
+}
+
+/* ---------- scrim, so the Persian copy keeps its contrast ---------- */
+.world__veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.world__veil[data-veil='deep'] {
+  background: linear-gradient(
+    to top,
+    rgba(7, 5, 4, 0.96) 0%,
+    rgba(9, 7, 5, 0.74) 42%,
+    rgba(9, 7, 5, 0.42) 100%
+  );
+}
+
+.world__veil[data-veil='soft'] {
+  background: linear-gradient(
+    to top,
+    rgba(7, 5, 4, 0.9) 0%,
+    rgba(7, 5, 4, 0.6) 48%,
+    rgba(9, 7, 5, 0.24) 100%
+  );
+}
+
+/* Reading worlds: the footage stays visibly present but never competes. */
+.world__veil[data-veil='reading'] {
+  background: linear-gradient(
+    to top,
+    rgba(7, 5, 4, 0.97) 0%,
+    rgba(7, 5, 4, 0.88) 50%,
+    rgba(7, 5, 4, 0.58) 100%
+  );
+}
+
+.world__veil[data-veil='clear'] {
+  background: linear-gradient(
+    to top,
+    rgba(7, 5, 4, 0.88) 0%,
+    rgba(7, 5, 4, 0.3) 58%,
+    rgba(9, 7, 5, 0.1) 100%
+  );
+}
+
+.world__veil[data-veil='hero'] {
+  background: linear-gradient(
+      to left,
+      rgba(7, 5, 4, 0.95) 0%,
+      rgba(7, 5, 4, 0.86) 28%,
+      rgba(7, 5, 4, 0.52) 55%,
+      rgba(7, 5, 4, 0.12) 78%,
+      rgba(7, 5, 4, 0.3) 100%
+    ),
+    linear-gradient(to top, rgba(7, 5, 4, 0.92) 0%, rgba(7, 5, 4, 0.1) 46%);
+}
+
+/* ---------- the handoff between two worlds ---------- */
+/* A warm bloom that spills out of the incoming world as it rises into view. */
+.world__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: calc((1 - var(--in)) * var(--out) * 0.92);
+  background: radial-gradient(72% 58% at 50% 64%, rgba(217, 142, 60, 0.4), transparent 62%);
+}
+
+/* The dark curtain: opaque while the world is off-stage, gone while it plays. */
+.world__bridge {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: calc(1 - var(--in) * var(--out));
+}
+
+.world[data-transition='dissolve'] .world__bridge {
+  background: radial-gradient(118% 92% at 50% 48%, rgba(7, 5, 4, 0.94), #070504 74%);
+}
+
+.world[data-transition='warm'] .world__bridge {
+  background: radial-gradient(120% 96% at 50% 56%, rgba(26, 15, 6, 0.96), #070504 70%);
+}
+
+.world[data-transition='veil'] .world__bridge {
+  background: linear-gradient(
+    to bottom,
+    #070504 0%,
+    rgba(11, 9, 7, 0.9) 36%,
+    rgba(11, 9, 7, 0.62) 64%,
+    #070504 100%
+  );
+}
+
+.world__vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 50% 50%, transparent 46%, rgba(7, 5, 4, 0.55) 100%);
+}
+
+/* ---------- chapter progress rail ---------- */
+.world__rail {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 4;
+  height: 2px;
+  background: rgba(250, 243, 232, 0.1);
+}
+
+.world__rail span {
+  display: block;
+  height: 100%;
+  transform: scaleX(var(--p));
+  transform-origin: right center;
+  background: linear-gradient(to left, var(--amber-300), var(--amber-500) 62%, transparent);
+}
+
+.world--static .world__rail span {
+  opacity: 0.28;
+}
+
+/* ================= CONTENT LAYER ================= */
+.world__layer {
+  position: relative;
+  z-index: 3;
+}
+
+/* Opening world: the copy is pinned inside the stage for the whole world. */
+.world--stage .world__layer {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding-block: calc(var(--header-h) + 2rem) clamp(2rem, 7svh, 3.6rem);
+}
+
+/* Every other world: the copy is the first block of the flow, so it arrives
+   exactly as the stage pins and then hands the screen to the world's content. */
+.world--flow .world__flow {
+  position: relative;
+  z-index: 2;
+  margin-top: -100svh;
+}
+
+.world--flow .world__layer--flow {
+  display: grid;
+  align-content: end;
+  min-height: 88svh;
+  padding-block: calc(var(--header-h) + 2.4rem) clamp(2rem, 6svh, 3.4rem);
+}
+
+.world__copy {
+  display: grid;
+  gap: clamp(0.6rem, 1.4vh, 0.95rem);
+  max-width: 760px;
+}
+
+.world__chapter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  color: rgba(246, 198, 132, 0.62);
+}
+
+.world__num {
+  font-weight: 700;
+  color: var(--amber-300);
+}
+
+.world__name::before {
+  content: '—';
+  margin-inline-end: 0.5rem;
+  color: rgba(217, 142, 60, 0.55);
+}
+
+.world__title {
+  font-size: clamp(1.7rem, 3.5vw, 3rem);
+  line-height: 1.42;
+  text-wrap: balance;
+}
+
+.world__accent {
+  color: var(--amber-300);
+}
+
+.world__text {
+  max-width: 54ch;
+  font-size: clamp(0.92rem, 1.15vw, 1.04rem);
+  line-height: 2.05;
+  color: rgba(250, 243, 232, 0.8);
+}
+
+.world__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 0.45rem;
+}
+
+.world__meta {
+  margin-top: 0.3rem;
+}
+
+/* ---------- scroll-driven reveal (pure CSS, reversible) ---------- */
+.world--cinema .world__chapter {
+  opacity: var(--t1);
+  transform: translateY(calc((1 - var(--t1)) * 12px));
+}
+
+.world--cinema .world__eyebrow {
+  opacity: var(--t2);
+  transform: translateY(calc((1 - var(--t2)) * 16px));
+}
+
+.world--cinema .world__title {
+  opacity: var(--t3);
+  transform: translateY(calc((1 - var(--t3)) * 20px));
+}
+
+.world--cinema .world__text {
+  opacity: var(--t4);
+  transform: translateY(calc((1 - var(--t4)) * 22px));
+}
+
+.world--cinema .world__actions {
+  opacity: var(--t5);
+  transform: translateY(calc((1 - var(--t5)) * 24px));
+  /* Clip follows the fade, so an unread CTA is not clickable yet. */
+  clip-path: inset(0 0 calc((1 - var(--t5)) * 100%) 0);
+}
+
+.world--cinema .world__meta {
+  opacity: var(--t6);
+  transform: translateY(calc((1 - var(--t6)) * 16px));
+}
+
+/* ================= FLOW CONTENT (cards, forms, galleries) ================= */
+.world-block {
+  position: relative;
+  padding-block: clamp(2rem, 5.5svh, 3.6rem);
+}
+
+.world-block:last-child {
+  padding-bottom: clamp(3rem, 9svh, 6rem);
+}
+
+/* A chapter sub-heading for the blocks that scroll over the film. */
+.world-subtitle {
+  font-size: clamp(1rem, 1.7vw, 1.2rem);
+  font-weight: 700;
+  color: var(--cream-50);
+}
+
+.world-block .world-subtitle {
+  margin-bottom: clamp(0.7rem, 1.8vh, 1.1rem);
+}
+
+/* Hospitality features, laid out as three plates over the film. */
+.feature-list--grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.9rem, 1.8vw, 1.4rem);
+  margin-top: clamp(1.2rem, 3vh, 2rem);
+}
+
+.feature-list--grid .feature {
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: clamp(1.1rem, 2vw, 1.6rem);
+  background: rgba(14, 12, 9, 0.72);
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-md);
+}
+
+.hospitality__lead {
+  max-width: 62ch;
+}
+
+.reviews__empty {
+  max-width: 60ch;
+  padding: clamp(1.3rem, 3vw, 2rem);
+  border: 1px dashed var(--line-amber);
+  border-radius: var(--radius-md);
+  background: rgba(11, 9, 7, 0.62);
+  color: rgba(250, 243, 232, 0.74);
+  font-size: 0.92rem;
+}
+
+/* ================= HERO-ONLY BITS ================= */
+.world__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  font-size: 0.76rem;
+  color: rgba(250, 243, 232, 0.58);
+}
+
+.world__cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  /* Gone as soon as the visitor starts scrolling through the opening. */
+  opacity: clamp(0, calc(1 - var(--p) * 6), 1);
+}
+
+.world__hint {
+  color: rgba(246, 198, 132, 0.62);
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 900px) {
+  .world {
+    /* Shorter cinematic travel; content still dictates its own pacing. */
+    min-height: calc(var(--world-travel) * 0.68 + 100svh);
+  }
+
+  .world__poster,
+  .world__el {
+    object-position: var(--world-focus-mobile, var(--world-focus, 50% 50%));
+  }
+
+  .world__copy {
+    max-width: none;
+  }
+
+  .world--flow .world__layer--flow {
+    min-height: 84svh;
+  }
+
+  .world__veil[data-veil='hero'] {
+    background: linear-gradient(
+      to top,
+      rgba(7, 5, 4, 0.96) 4%,
+      rgba(7, 5, 4, 0.82) 36%,
+      rgba(7, 5, 4, 0.34) 68%,
+      rgba(7, 5, 4, 0.16) 100%
+    );
+  }
+
+  .world__title {
+    font-size: clamp(1.5rem, 6.6vw, 2.2rem);
+    line-height: 1.5;
+  }
+
+  .world__text {
+    font-size: 0.94rem;
+    line-height: 2;
+  }
+
+  .world__actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .world__vignette {
+    background: radial-gradient(140% 100% at 50% 52%, transparent 40%, rgba(7, 5, 4, 0.6) 100%);
+  }
+
+  .feature-list--grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ================= STATIC / REDUCED MOTION ================= */
+/* No pinned stage, no travel, no scrubbing: the poster and every word of the
+   copy stay in normal flow and remain fully reachable. */
+.world--static {
+  --in: 1;
+  --out: 1;
+  --t1: 1;
+  --t2: 1;
+  --t3: 1;
+  --t4: 1;
+  --t5: 1;
+  --t6: 1;
+}
+
+.world--static .world__stage {
+  position: relative;
+  height: auto;
+  min-height: 68svh;
+}
+
+.world--static .world__scene {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.world--static .world__flow {
+  margin-top: 0;
+}
+
+.world--static .world__layer--flow {
+  min-height: 0;
+}
+
+.world--static .world__glow,
+.world--static .world__bridge {
+  display: none;
+}
+
+.world--static .world__actions {
+  clip-path: none;
+}
+
+.world--static.world--stage .world__layer {
+  position: relative;
+  inset: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world {
+    min-height: 0;
+    --in: 1;
+    --out: 1;
+    --t1: 1;
+    --t2: 1;
+    --t3: 1;
+    --t4: 1;
+    --t5: 1;
+    --t6: 1;
+  }
+
+  .world__stage {
+    position: relative;
+    height: auto;
+    min-height: 68svh;
+  }
+
+  .world__scene {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .world__el {
+    transition: none;
+  }
+
+  .world__glow,
+  .world__bridge {
+    display: none;
+  }
+
+  .world__flow {
+    margin-top: 0;
+  }
+
+  .world__layer--flow {
+    min-height: 0;
+  }
+
+  .world--stage .world__layer {
+    position: relative;
+    inset: auto;
+  }
+
+  .world__actions {
+    clip-path: none;
+  }
+
+  .world__cue {
+    opacity: 1;
+  }
+}
