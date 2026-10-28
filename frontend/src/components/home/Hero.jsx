@@ -35,7 +35,7 @@ export default function Hero() {
             alt="کباب زغالی تازه روی حرارت زغال در رستوران مستر کباب"
             width="1280"
             height="720"
-            fetchPriority="high"
+            fetchpriority="high"
             decoding="async"
           />
           {scrubEnabled ? (
