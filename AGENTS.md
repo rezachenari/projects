@@ -136,8 +136,11 @@ at 0 and the incoming at 0, which is the dissolve.
 ### Loading, decoding and mobile
 
 - Only the hero is eager. Every other world attaches its source when it comes within
-  ~1.3 viewports (`IntersectionObserver` + a geometry check that rejects hits reported
-  while the page is still laying out). Typically the hero plus two neighbours are alive.
+  ~1.3 viewports, measured on each scroll frame (rAF-throttled `scroll`/`resize`
+  listener). Do **not** gate this with an `IntersectionObserver`: it reports only the
+  frame that crosses its margin, so a hit rejected during layout settling never
+  repeats and the world stays video-less (poster + empty choreography) for good.
+  Typically the hero plus two neighbours are alive.
 - `≤900px` gets the `-mobile.mp4` (960px wide) re-encode, chosen at mount time.
 - `prefers-reduced-motion: reduce` or `saveData`/2G → `world--static`: no sticky stage,
   no travel, poster only, all copy visible in normal flow. The hook's `scrubEnabled`

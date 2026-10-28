@@ -90,31 +90,52 @@ export default function useScrollVideoScrub({
   }, []);
 
   // Attach the source shortly before the section reaches the viewport.
+  //
+  // Deliberately geometry-driven on scroll instead of `IntersectionObserver`:
+  // an observer reports the ONE frame that crosses its margin, so if that frame
+  // is also the moment the page is still laying out (images/fonts settling) the
+  // source can be postponed forever — the section is already "intersecting" and
+  // never reports again, which left every world except the eager one with no
+  // video at all. Measuring on every scroll frame cannot get stuck.
   useEffect(() => {
     if (!lazy || shouldLoad) return undefined;
     const section = sectionRef.current;
-    if (!section || typeof IntersectionObserver === 'undefined') {
+    if (!section) return undefined;
+
+    let rafId = 0;
+
+    // How far ahead of the section the source is attached, in px.
+    const leadIn = () => {
+      const value = Number.parseFloat(preloadMargin);
+      if (!Number.isFinite(value)) return window.innerHeight;
+      return preloadMargin.trim().endsWith('%')
+        ? (value / 100) * window.innerHeight
+        : value;
+    };
+
+    const check = () => {
+      rafId = 0;
+      const rect = section.getBoundingClientRect();
+      const lead = leadIn();
+      if (rect.top > window.innerHeight + lead || rect.bottom < -lead) return;
       setShouldLoad(true);
-      return undefined;
-    }
+    };
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        // A far-away world can be reported as intersecting while the page is
-        // still being laid out (or right after a route change), so confirm the
-        // real geometry before spending a video download on it.
-        const rect = section.getBoundingClientRect();
-        const slack = window.innerHeight;
-        if (rect.top > window.innerHeight + slack || rect.bottom < -slack) return;
-        setShouldLoad(true);
-        observer.disconnect();
-      },
-      { rootMargin: `${preloadMargin} 0px`, threshold: 0 },
-    );
+    const schedule = () => {
+      if (!rafId) rafId = requestAnimationFrame(check);
+    };
 
-    observer.observe(section);
-    return () => observer.disconnect();
+    schedule();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    window.addEventListener('orientationchange', schedule, { passive: true });
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      window.removeEventListener('orientationchange', schedule);
+    };
   }, [lazy, preloadMargin, shouldLoad]);
 
   useEffect(() => {
