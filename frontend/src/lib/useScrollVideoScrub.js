@@ -1,0 +1,249 @@
+import { useEffect, useRef, useState } from 'react';
+
+/**
+ * True scroll-driven video scrubbing for the hero.
+ *
+ * The displayed frame is a pure function of scroll position:
+ *
+ *   progress = clamp((scrollY - sectionTop) / travel, 0, 1)
+ *   video.currentTime = progress * video.duration
+ *
+ * - Never calls play()/pause(): the video is a frame source, not a playback.
+ * - One rAF loop, and only while the hero section is on screen.
+ * - A single controller per <video> element (guarded via a WeakMap), so a
+ *   remount or a StrictMode double-mount can never fight over the same video.
+ * - Re-measures geometry on resize / orientation change / layout shifts.
+ */
+
+const MOBILE_QUERY = '(max-width: 900px)';
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+// One frame at 24fps is ~0.0417s. Skip updates finer than a third of a frame so
+// we never queue the same seek repeatedly ("avoid repeated timestamp assignment").
+const MIN_SEEK_DELTA = 0.012;
+
+// The last frame is a hair inside the tail: seeking exactly to `duration` some
+// browsers render black instead of the final frame.
+const TAIL_EPSILON = 0.05;
+
+const controllers = new WeakMap();
+
+function prefersReducedMotion() {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
+}
+
+function isConstrainedConnection() {
+  if (typeof navigator === 'undefined') return false;
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (!connection) return false;
+  return Boolean(connection.saveData) || /(^|-)2g$/.test(connection.effectiveType || '');
+}
+
+export default function useScrollVideoScrub({ desktopSrc, mobileSrc, poster }) {
+  const sectionRef = useRef(null);
+  const stageRef = useRef(null);
+  const videoRef = useRef(null);
+
+  const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion);
+  // Save-data / very slow connections get the poster instead of a heavy scrub.
+  const [constrained] = useState(isConstrainedConnection);
+  const [videoSrc] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches ? mobileSrc : desktopSrc,
+  );
+  const [videoReady, setVideoReady] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+
+  const scrubEnabled = !reducedMotion && !constrained && !videoFailed;
+
+  // Respect a live change of the OS "reduce motion" setting.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const media = window.matchMedia(REDUCED_MOTION_QUERY);
+    const onChange = (event) => setReducedMotion(event.matches);
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, []);
+
+  useEffect(() => {
+    if (!scrubEnabled) return undefined;
+
+    const section = sectionRef.current;
+    const stage = stageRef.current;
+    const video = videoRef.current;
+    if (!section || !stage || !video) return undefined;
+
+    // Never allow a second controller to drive the same element.
+    if (controllers.has(video)) return undefined;
+    controllers.set(video, true);
+
+    let rafId = 0;
+    let visible = false;
+    let duration = 0;
+    let startY = 0;
+    let travel = 1;
+    let lastApplied = -1;
+    let queued = null;
+
+    stage.style.setProperty('--hero-progress', '0');
+
+    const readDuration = () => {
+      duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
+    };
+
+    const measure = () => {
+      const stickyTop = Number.parseFloat(getComputedStyle(stage).top) || 0;
+      startY = section.getBoundingClientRect().top + window.scrollY;
+      travel = Math.max(1, section.offsetHeight - stage.offsetHeight - stickyTop);
+      readDuration();
+    };
+
+    const applyTime = (time) => {
+      if (Math.abs(time - lastApplied) < MIN_SEEK_DELTA) return;
+      lastApplied = time;
+      // If the decoder is still catching up, keep only the freshest target and
+      // apply it from `seeked` — this is what keeps scrolling responsive.
+      if (video.seeking) {
+        queued = time;
+        return;
+      }
+      video.currentTime = time;
+    };
+
+    const progressAtScroll = () => {
+      const raw = (window.scrollY - startY) / travel;
+      if (!Number.isFinite(raw) || raw <= 0) return 0;
+      return raw >= 1 ? 1 : raw;
+    };
+
+    const tick = () => {
+      rafId = 0;
+      const progress = progressAtScroll();
+      stage.style.setProperty('--hero-progress', progress.toFixed(4));
+
+      if (duration > 0) {
+        const tail = Math.max(0, duration - TAIL_EPSILON);
+        applyTime(Math.min(tail, progress * duration));
+      }
+
+      if (visible) rafId = requestAnimationFrame(tick);
+    };
+
+    const start = () => {
+      if (!rafId) rafId = requestAnimationFrame(tick);
+    };
+
+    const stop = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = 0;
+    };
+
+    const onLoadedMetadata = () => {
+      measure();
+      lastApplied = -1;
+      readDuration();
+      start();
+    };
+
+    const onDurationChange = () => readDuration();
+
+    const onFirstFrame = () => {
+      readDuration();
+      setVideoReady(true);
+    };
+
+    const onSeeked = () => {
+      // Release the freshest target that arrived while the decoder was busy.
+      if (queued !== null) {
+        const next = queued;
+        queued = null;
+        lastApplied = next;
+        video.currentTime = next;
+      }
+      setVideoReady(true);
+    };
+
+    const onError = () => setVideoFailed(true);
+
+    const onResize = () => {
+      measure();
+      start();
+    };
+
+    const observer =
+      typeof IntersectionObserver === 'undefined'
+        ? null
+        : new IntersectionObserver(
+            ([entry]) => {
+              visible = entry.isIntersecting;
+              if (visible) {
+                measure();
+                start();
+              } else {
+                stop();
+              }
+            },
+            { threshold: 0 },
+          );
+
+    if (observer) observer.observe(section);
+    else {
+      visible = true;
+      measure();
+      start();
+    }
+
+    // Re-measure when the section's own box changes (fonts, media, viewport).
+    const layoutObserver =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => measure());
+
+    if (layoutObserver) {
+      layoutObserver.observe(section);
+      layoutObserver.observe(stage);
+    }
+
+    video.addEventListener('loadedmetadata', onLoadedMetadata);
+    video.addEventListener('durationchange', onDurationChange);
+    video.addEventListener('loadeddata', onFirstFrame);
+    video.addEventListener('canplay', onFirstFrame);
+    video.addEventListener('seeked', onSeeked);
+    video.addEventListener('error', onError);
+    window.addEventListener('resize', onResize, { passive: true });
+    window.addEventListener('orientationchange', onResize, { passive: true });
+
+    // Metadata may already be there by the time the effect runs.
+    if (video.readyState >= 1) {
+      measure();
+      lastApplied = -1;
+      start();
+    }
+    start();
+
+    return () => {
+      stop();
+      controllers.delete(video);
+      if (observer) observer.disconnect();
+      if (layoutObserver) layoutObserver.disconnect();
+      video.removeEventListener('loadedmetadata', onLoadedMetadata);
+      video.removeEventListener('durationchange', onDurationChange);
+      video.removeEventListener('loadeddata', onFirstFrame);
+      video.removeEventListener('canplay', onFirstFrame);
+      video.removeEventListener('seeked', onSeeked);
+      video.removeEventListener('error', onError);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, [scrubEnabled, videoFailed, videoSrc]);
+
+  return {
+    sectionRef,
+    stageRef,
+    videoRef,
+    poster,
+    videoSrc,
+    scrubEnabled,
+    videoReady,
+    videoFailed,
+    handleVideoError: () => setVideoFailed(true),
+  };
+}

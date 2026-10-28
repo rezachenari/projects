@@ -1,0 +1,752 @@
+/* =========================================================
+   Mister Kebab — sections: hero scrub, menu, story, craft,
+   gallery, hospitality, reviews, reservation, closing
+   ========================================================= */
+
+section[id] {
+  scroll-margin-top: calc(var(--header-h) + 6px);
+}
+
+/* ================= HERO (scroll-driven video) ================= */
+.hero {
+  position: relative;
+  isolation: isolate;
+  background: var(--char-950);
+}
+
+/* Tall scroll container. The sticky stage inside it is pinned while the user
+   scrolls the difference (travel). `overflow` must stay visible or sticky dies. */
+.hero--scrub {
+  display: block;
+  height: calc(var(--hero-stage-h) + var(--hero-travel));
+  overflow: visible;
+}
+
+.hero__stage {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  min-height: var(--hero-stage-h);
+  background: var(--char-950);
+  overflow: hidden;
+}
+
+.hero--scrub .hero__stage {
+  position: sticky;
+  top: 0;
+  height: var(--hero-stage-h);
+  min-height: 0;
+}
+
+.hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  background: var(--char-950);
+}
+
+.hero__poster,
+.hero__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+.hero__video {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 600ms var(--ease-out);
+}
+
+.hero__video.is-ready {
+  opacity: 1;
+}
+
+.hero__veil {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+      to left,
+      rgba(7, 5, 4, 0.95) 0%,
+      rgba(7, 5, 4, 0.86) 28%,
+      rgba(7, 5, 4, 0.52) 55%,
+      rgba(7, 5, 4, 0.12) 78%,
+      rgba(7, 5, 4, 0.3) 100%
+    ),
+    linear-gradient(to top, rgba(7, 5, 4, 0.92) 0%, rgba(7, 5, 4, 0.1) 46%);
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  align-content: end;
+  gap: clamp(1.4rem, 4vh, 2.6rem);
+  height: 100%;
+  min-height: inherit;
+  padding-block: calc(var(--header-h) + 2rem) clamp(2rem, 5vh, 3.4rem);
+}
+
+.hero__copy {
+  display: grid;
+  gap: 1rem;
+  max-width: 620px;
+}
+
+.hero h1 {
+  text-wrap: balance;
+}
+
+.hero__accent {
+  color: var(--amber-300);
+}
+
+.hero__text {
+  max-width: 52ch;
+  font-size: clamp(0.95rem, 1.15vw, 1.05rem);
+  line-height: 2;
+  color: rgba(250, 243, 232, 0.8);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+.hero__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  font-size: 0.76rem;
+  color: rgba(250, 243, 232, 0.58);
+}
+
+.hero__cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  /* Fades as soon as the animation starts (driven from the scrub hook). */
+  opacity: clamp(0, calc(1 - var(--hero-progress, 0) * 6), 1);
+  transition: opacity 200ms linear;
+}
+
+.hero__hint {
+  color: rgba(246, 198, 132, 0.62);
+}
+
+.hero__progress {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 3;
+  height: 2px;
+  background: rgba(250, 243, 232, 0.12);
+}
+
+.hero__progress span {
+  display: block;
+  height: 100%;
+  transform: scaleX(var(--hero-progress, 0));
+  transform-origin: right center;
+  background: linear-gradient(to left, var(--amber-300), var(--amber-500) 60%, transparent);
+}
+
+.hero--static .hero__progress span {
+  transform: scaleX(1);
+  opacity: 0.35;
+}
+
+@media (max-width: 900px) {
+  .hero__veil {
+    background: linear-gradient(to top, rgba(7, 5, 4, 0.96) 4%, rgba(7, 5, 4, 0.82) 36%, rgba(7, 5, 4, 0.34) 68%, rgba(7, 5, 4, 0.16) 100%);
+  }
+
+  .hero__poster,
+  .hero__video {
+    object-position: 50% 42%;
+  }
+
+  .hero__inner {
+    padding-block: calc(var(--header-h) + 1.2rem) clamp(1.4rem, 4vh, 2.2rem);
+  }
+
+  .hero__copy {
+    gap: 0.85rem;
+  }
+
+  .hero h1 {
+    font-size: clamp(1.75rem, 7.4vw, 2.4rem);
+  }
+
+  .hero__actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
+/* ================= SIGNATURE MENU ================= */
+.menu-section {
+  overflow: hidden;
+}
+
+.menu-section__head {
+  max-width: 680px;
+}
+
+.menu-section__desc {
+  max-width: 60ch;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: rgba(250, 243, 232, 0.62);
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.9rem, 1.8vw, 1.4rem);
+}
+
+.menu-section__cta {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(1.8rem, 3.4vw, 2.8rem);
+}
+
+/* ================= STORY ================= */
+.story__grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: clamp(1.8rem, 4vw, 3.6rem);
+  align-items: center;
+}
+
+.story__media {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--line-light);
+}
+
+.story__media img {
+  width: 100%;
+  height: 100%;
+  min-height: 340px;
+  max-height: 520px;
+  object-fit: cover;
+}
+
+.story__media-line {
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(246, 198, 132, 0.26);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+.story__body {
+  display: grid;
+  gap: 1rem;
+  max-width: 620px;
+}
+
+.story__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 0.8rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line-light);
+}
+
+.stat {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.stat__value {
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  font-weight: 800;
+  color: var(--amber-300);
+}
+
+.stat__label {
+  font-size: 0.76rem;
+  color: var(--smoke-400);
+}
+
+/* ================= CRAFT (charcoal steps) ================= */
+.craft {
+  overflow: hidden;
+}
+
+.craft__head {
+  max-width: 640px;
+}
+
+.craft__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.6rem);
+}
+
+.craft-step {
+  position: relative;
+  display: grid;
+  gap: 0.6rem;
+  padding: clamp(1.4rem, 2.4vw, 2rem);
+  background: rgba(14, 12, 9, 0.72);
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.craft-step__num {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--amber-500);
+  letter-spacing: 0.1em;
+}
+
+.craft-step__title {
+  font-size: 1.05rem;
+}
+
+.craft-step__text {
+  font-size: 0.88rem;
+  line-height: 1.95;
+  color: rgba(250, 243, 232, 0.68);
+}
+
+.craft-step__icon {
+  position: absolute;
+  inset-inline-end: 1.2rem;
+  bottom: 1.1rem;
+  color: rgba(217, 142, 60, 0.34);
+}
+
+/* ================= GALLERY ================= */
+.gallery {
+  overflow: hidden;
+}
+
+.gallery__head {
+  max-width: 640px;
+}
+
+.gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: clamp(150px, 17vw, 210px);
+  gap: clamp(0.6rem, 1.2vw, 0.95rem);
+}
+
+.gallery__item--wide {
+  grid-column: span 2;
+}
+
+.gallery__item--tall {
+  grid-row: span 2;
+}
+
+.gallery__button {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--line-light);
+  background: var(--char-800);
+  transition: border-color var(--dur-base) var(--ease-out);
+}
+
+.gallery__button:hover {
+  border-color: var(--line-amber-strong);
+}
+
+.gallery__button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--dur-slow) var(--ease-out), filter var(--dur-base) var(--ease-out);
+}
+
+.gallery__button:hover img {
+  transform: scale(1.05);
+  filter: brightness(1.06);
+}
+
+.gallery__caption {
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  bottom: 0.65rem;
+  z-index: 1;
+  font-size: 0.76rem;
+  color: var(--cream-50);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.gallery__button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(7, 5, 4, 0.66), transparent 52%);
+}
+
+.gallery__zoom {
+  position: absolute;
+  top: 0.6rem;
+  inset-inline-end: 0.6rem;
+  z-index: 1;
+  display: inline-flex;
+  padding: 0.32rem;
+  border-radius: 50%;
+  color: var(--cream-50);
+  background: rgba(7, 5, 4, 0.55);
+  border: 1px solid var(--line-light);
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.gallery__button:hover .gallery__zoom,
+.gallery__button:focus-visible .gallery__zoom {
+  opacity: 1;
+}
+
+.gallery__cta {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(1.6rem, 3vw, 2.4rem);
+}
+
+/* ================= HOSPITALITY ================= */
+.hospitality__grid {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: clamp(1.8rem, 4vw, 3.4rem);
+  align-items: center;
+}
+
+.hospitality__body {
+  display: grid;
+  gap: 1rem;
+  max-width: 600px;
+}
+
+.hospitality__media {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.feature-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.6rem;
+}
+
+.feature {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+
+.feature__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--amber-300);
+  background: rgba(217, 142, 60, 0.12);
+  border: 1px solid var(--line-amber);
+}
+
+.feature__title {
+  font-size: 0.98rem;
+  margin-bottom: 0.15rem;
+}
+
+.feature__text {
+  font-size: 0.85rem;
+  line-height: 1.9;
+  color: rgba(250, 243, 232, 0.64);
+}
+
+/* ================= REVIEWS ================= */
+.reviews {
+  overflow: hidden;
+}
+
+.reviews__head {
+  max-width: 560px;
+}
+
+.reviews__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.9rem, 2vw, 1.4rem);
+}
+
+/* ================= RESERVATION ================= */
+.reserve {
+  overflow: hidden;
+}
+
+.reserve__grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: clamp(1.8rem, 4vw, 3.4rem);
+  align-items: start;
+}
+
+.reserve__info {
+  display: grid;
+  gap: 1rem;
+  max-width: 540px;
+}
+
+.reserve__list {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 0.8rem;
+}
+
+.reserve__list li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.reserve__list strong {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--cream-100);
+}
+
+.reserve__list span,
+.reserve__list a {
+  font-size: 0.84rem;
+}
+
+.reserve__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--amber-300);
+  background: rgba(217, 142, 60, 0.12);
+  border: 1px solid var(--line-amber);
+}
+
+/* ================= CLOSING ================= */
+.closing {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-items: center;
+  min-height: 62svh;
+  overflow: hidden;
+  background: var(--char-950);
+}
+
+.closing__video,
+.closing__veil {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.closing__video {
+  object-fit: cover;
+  z-index: -2;
+}
+
+.closing__veil {
+  z-index: -1;
+  background: linear-gradient(to top, rgba(7, 5, 4, 0.96), rgba(7, 5, 4, 0.74));
+}
+
+.closing__inner {
+  position: relative;
+  padding-block: clamp(3.5rem, 8vw, 6rem);
+}
+
+.closing__copy {
+  display: grid;
+  gap: 1rem;
+  max-width: 620px;
+}
+
+.closing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+/* ================= MENU PAGE ================= */
+.menu-page {
+  padding-block: clamp(2.4rem, 5vw, 4rem) var(--section-y);
+}
+
+.menu-category + .menu-category {
+  margin-top: clamp(2.6rem, 5vw, 4rem);
+  padding-top: clamp(2.6rem, 5vw, 4rem);
+  border-top: 1px solid var(--line-light);
+}
+
+.menu-category__head {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 1.4rem;
+  max-width: 60ch;
+}
+
+.menu-category__head p {
+  font-size: 0.88rem;
+}
+
+.menu-page__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: clamp(2.6rem, 5vw, 4rem);
+  padding: clamp(1.4rem, 2.6vw, 2rem);
+  background: rgba(217, 142, 60, 0.07);
+  border: 1px solid var(--line-amber);
+  border-radius: var(--radius-md);
+}
+
+.menu-page__cta-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--amber-300);
+  background: rgba(217, 142, 60, 0.14);
+}
+
+.menu-page__cta p {
+  flex: 1 1 240px;
+  font-size: 0.92rem;
+  color: rgba(250, 243, 232, 0.78);
+}
+
+/* ================= RESERVATION PAGE ================= */
+.reserve-page__grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(1.8rem, 4vw, 3.4rem);
+  align-items: start;
+}
+
+.reserve-page__aside {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1.4rem, 2.6vw, 2rem);
+  background: rgba(18, 16, 12, 0.6);
+  border: 1px solid var(--line-light);
+  border-radius: var(--radius-md);
+}
+
+/* ================= GALLERY PAGE ================= */
+.gallery-page {
+  padding-block: clamp(2.4rem, 5vw, 4rem) var(--section-y);
+}
+
+.gallery__grid--full {
+  grid-auto-rows: clamp(160px, 20vw, 250px);
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1080px) {
+  .menu-grid,
+  .reviews__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .craft__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .story__grid,
+  .hospitality__grid,
+  .reserve__grid,
+  .reserve-page__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .story__media img {
+    min-height: 280px;
+  }
+
+  .gallery__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .menu-grid,
+  .reviews__grid,
+  .craft__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .story__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .gallery__grid {
+    grid-auto-rows: clamp(130px, 30vw, 170px);
+  }
+
+  .gallery__item--wide {
+    grid-column: span 2;
+  }
+
+  .gallery__item--tall {
+    grid-row: span 1;
+  }
+
+  .hero__foot .hero__hint {
+    display: none;
+  }
+}
+
+/* Reduced motion: a single, still hero — no long animated scroll. */
+@media (prefers-reduced-motion: reduce) {
+  .hero--scrub {
+    height: auto;
+    --hero-travel: 0px;
+  }
+
+  .hero__video {
+    transition: none;
+  }
+
+  .gallery__button img,
+  .dish-card__media img {
+    transition: none;
+  }
+}

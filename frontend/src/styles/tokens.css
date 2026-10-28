@@ -1,0 +1,72 @@
+/* =========================================================
+   Mister Kebab — design tokens
+   Charcoal & ember: the palette of a charcoal grill at night.
+   ========================================================= */
+:root {
+  /* Charcoal surfaces */
+  --char-950: #070504;
+  --char-900: #0b0907;
+  --char-850: #12100c;
+  --char-800: #1a1611;
+  --char-750: #241d16;
+
+  /* Ember & grilled gold */
+  --amber-500: #d98e3c;
+  --amber-400: #eaa851;
+  --amber-300: #f6c684;
+  --gold-600: #b2742c;
+
+  /* Warm neutrals */
+  --cream-50: #faf3e8;
+  --cream-100: #ecddc9;
+  --smoke-400: #a29486;
+  --smoke-500: #7d7266;
+
+  --danger: #e0766f;
+  --success: #8fbf94;
+
+  /* Lines */
+  --line-amber: rgba(217, 142, 60, 0.22);
+  --line-amber-strong: rgba(217, 142, 60, 0.52);
+  --line-light: rgba(250, 243, 232, 0.1);
+  --line-dark: rgba(11, 9, 7, 0.12);
+
+  /* Typography */
+  --font-fa: 'Vazirmatn', 'IRANYekan', 'Segoe UI', Tahoma, system-ui, sans-serif;
+
+  /* Rhythm */
+  --container: 1280px;
+  --gutter: clamp(20px, 4vw, 56px);
+  --section-y: clamp(64px, 7vw, 112px);
+  --header-h: 78px;
+
+  /* Scroll-driven hero: sticky stage + the scroll distance it stays pinned */
+  --hero-stage-h: 100vh;
+  --hero-travel: 280vh;
+
+  /* Shape & motion */
+  --radius-sm: 3px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 700ms;
+
+  --shadow-soft: 0 24px 60px -34px rgba(7, 5, 4, 0.65);
+  --shadow-lift: 0 32px 74px -40px rgba(7, 5, 4, 0.8);
+}
+
+/* Small viewport units keep the sticky stage clear of mobile browser chrome. */
+@supports (height: 100svh) {
+  :root {
+    --hero-stage-h: 100svh;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --header-h: 64px;
+    --hero-travel: 210vh;
+  }
+}
