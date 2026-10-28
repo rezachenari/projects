@@ -1,14 +1,14 @@
 import { Quote } from 'lucide-react';
 import Reveal from '../ui/Reveal';
 import Stars from '../ui/Stars';
-import BackgroundVideo from '../ui/BackgroundVideo';
+import ScrollVideo from '../ui/ScrollVideo';
 
 export default function Reviews({ testimonials = [] }) {
   const items = testimonials.slice(0, 3);
 
   return (
     <section className="section section--dark reviews" id="reviews" aria-labelledby="reviews-title">
-      <BackgroundVideo src="/videos/testimonials-background.mp4" poster="/images/testimonials.webp" veil="deep" />
+      <ScrollVideo src="/videos/testimonials-background.mp4" poster="/images/testimonials.webp" veil="deep" />
 
       <div className="container">
         <Reveal className="section-head section-head--center reviews__head">

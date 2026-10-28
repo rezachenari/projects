@@ -88,14 +88,39 @@ save-data/2G, or when the video errors.
   stays with the full copy and CTAs.
 - `≤900px` → the 960px-wide re-encode and a bottom-anchored gradient/`object-position`.
 
-## The other eight videos are ordinary background videos
+## Every other video is scroll-driven too
 
-`frontend/src/components/ui/BackgroundVideo.jsx` lazy-attaches the source once the
-section is ~280px away, plays muted+looped while in view and pauses off screen.
-`play()` is retried from `canplay` because a play request issued before media data
-is rejected. `serving-food`, `persian-hospitality`, `signature-dishes`,
-`charcoal-grilling`, `testimonials-background`, `reservation-cta` and
-`footer-closing` all use this. **Do not add scrubbing to them.**
+`frontend/src/components/ui/ScrollVideo.jsx` uses the same hook with
+`mode: 'traverse'` and backs every remaining video section: `signature-dishes`,
+`restaurant-interior` (story), `charcoal-grilling`, `serving-food`,
+`persian-hospitality` (media panel), `testimonials-background`,
+`reservation-cta` and `footer-closing`. **No autoplay, no loop, never `play()`** —
+`video.currentTime = progress * duration`, where progress runs from the moment the
+section's top reaches the viewport bottom until its bottom leaves the viewport top,
+so no sticky stage is needed and no section content is ever clipped.
+
+- `--scene-progress` (0→1) is written on the `.bg-video` wrapper. `--scene-enter`
+  (the first 45 % of the travel) drives the arrival: the frame pushes in from
+  `scale(1.18)`, brightens, and resolves out of a radial curtain.
+- The source is attached ~320 px before the section arrives, and the rAF loop only
+  runs while the section intersects the viewport.
+- `.section` carries `isolation: isolate` so the `z-index: -1` backdrop paints above
+  the section's own background. **Removing it makes every video disappear.**
+- Reduced motion / save-data → poster only; a video error unmounts the `<video>` and
+  keeps the poster.
+
+### Every video file needs dense keyframes
+
+All files in `frontend/public/videos` are re-encodes with a keyframe every 4 frames
+(`-g 4`) and no audio. The originals have a **single** keyframe for the whole clip,
+so every seek decoded from frame 0 and scrubbing lagged badly. Regenerate with:
+
+```bash
+ffmpeg -i original.mp4 -an -c:v libx264 -g 4 -keyint_min 4 -sc_threshold 0 -bf 0 \
+  -crf 26 -preset veryfast -movflags +faststart out.mp4
+```
+
+Do not replace them with normally encoded files or different footage.
 
 ## Things that are easy to get wrong
 
@@ -127,6 +152,11 @@ Scrub check in the preview browser (`video.currentTime` ≈ progress × duration
 document.querySelector('.hero').dataset.videoState;   // "ready"
 const v = document.querySelector('[data-testid="hero-video"]');
 window.scrollTo(0, 1120); v.currentTime;              // ≈ half of v.duration on a 800px viewport
+
+// Any section world: scroll it through the viewport and watch the frame follow.
+const world = document.querySelector('#craft [data-testid="scene-video-wrap"]');
+world.dataset.videoState;                              // "ready"
+world.style.getPropertyValue('--scene-progress');       // moves with scroll, 0 → 1
 ```
 
 Reservation round trip (creates a row — delete it afterwards):

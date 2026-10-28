@@ -1,5 +1,6 @@
 import { Coffee, HandPlatter, Users } from 'lucide-react';
 import Reveal from '../ui/Reveal';
+import ScrollVideo from '../ui/ScrollVideo';
 
 const FEATURES = [
   {
@@ -50,20 +51,11 @@ export default function Hospitality() {
         </Reveal>
 
         <Reveal className="hospitality__media" delay={90}>
-          <video
-            className="media-panel__video"
+          <ScrollVideo
+            variant="panel"
             src="/videos/persian-hospitality.mp4"
             poster="/images/hospitality.webp"
-            muted
-            loop
-            autoPlay
-            playsInline
-            preload="metadata"
-            aria-label="صحنه‌هایی از مهمان‌نوازی در مستر کباب"
-            onLoadedData={(event) => {
-              const promise = event.currentTarget.play();
-              if (promise && typeof promise.catch === 'function') promise.catch(() => {});
-            }}
+            veil="soft"
           />
           <span className="media-panel__frame" aria-hidden="true" />
         </Reveal>

@@ -157,6 +157,8 @@ p {
 .section {
   position: relative;
   padding-block: var(--section-y);
+  /* Keeps the z-index:-1 video world above the section's own background. */
+  isolation: isolate;
 }
 
 .section--dark {

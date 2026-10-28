@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Expand } from 'lucide-react';
 import Reveal from '../ui/Reveal';
-import BackgroundVideo from '../ui/BackgroundVideo';
+import ScrollVideo from '../ui/ScrollVideo';
 import Lightbox from '../ui/Lightbox';
 import { GALLERY } from '../../lib/site';
 
@@ -12,7 +12,7 @@ export default function GalleryPreview() {
 
   return (
     <section className="section section--dark gallery" id="gallery" aria-labelledby="gallery-title">
-      <BackgroundVideo src="/videos/serving-food.mp4" poster="/images/serving.webp" veil="deep" />
+      <ScrollVideo src="/videos/serving-food.mp4" poster="/images/serving.webp" veil="deep" />
 
       <div className="container">
         <Reveal className="section-head gallery__head">

@@ -2,13 +2,25 @@
    Mister Kebab — components: media, cards, tabs, forms, lightbox
    ========================================================= */
 
-/* ---------- Lazy background video (non-hero sections) ---------- */
+/* ---------- Scroll-driven video worlds (every section) ---------- */
+/* `--scene-progress` is written by useScrollVideoScrub: 0 → 1 while the section
+   travels across the viewport. The first 45% of that travel is the arrival, so
+   the frame pushes in and resolves out of the dark — stepping into a new world
+   instead of just scrolling past a picture. */
 .bg-video {
   position: absolute;
   inset: 0;
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
+  --scene-progress: 0;
+  --scene-enter: clamp(0, calc(var(--scene-progress) / 0.45), 1);
+}
+
+.bg-video__media {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
 }
 
 .bg-video__poster,
@@ -30,27 +42,52 @@
   opacity: 1;
 }
 
+/* The arrival itself: push in, then brighten and settle as the section fills. */
+.bg-video.is-scrub .bg-video__media {
+  transform: scale(calc(1.18 - 0.18 * var(--scene-enter)));
+  filter: brightness(calc(0.6 + 0.4 * var(--scene-enter))) saturate(calc(1.3 - 0.3 * var(--scene-enter)));
+  will-change: transform;
+}
+
+.bg-video__curtain {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(128% 92% at 50% 46%, rgba(7, 5, 4, 0.45), rgba(7, 5, 4, 0.99) 74%);
+}
+
+.bg-video.is-scrub .bg-video__curtain {
+  opacity: calc(1 - var(--scene-enter));
+}
+
 .bg-video__veil {
   position: absolute;
   inset: 0;
 }
 
+/* Light enough that the footage reads as a world behind the copy, dark enough
+   that the cream text keeps its contrast on top of it. */
 .bg-video__veil--soft {
-  background: linear-gradient(to top, rgba(7, 5, 4, 0.94), rgba(7, 5, 4, 0.66));
+  background: linear-gradient(
+    to top,
+    rgba(7, 5, 4, 0.92) 0%,
+    rgba(7, 5, 4, 0.66) 48%,
+    rgba(9, 7, 5, 0.34) 100%
+  );
 }
 
 .bg-video__veil--deep {
-  background: linear-gradient(to top, rgba(7, 5, 4, 0.97), rgba(9, 7, 5, 0.86));
+  background: linear-gradient(
+    to top,
+    rgba(7, 5, 4, 0.95) 0%,
+    rgba(9, 7, 5, 0.72) 46%,
+    rgba(9, 7, 5, 0.48) 100%
+  );
 }
 
 /* ---------- Media panel (split sections) ---------- */
-.media-panel__video {
-  width: 100%;
-  height: 100%;
-  min-height: 320px;
-  max-height: 560px;
-  object-fit: cover;
-  border-radius: var(--radius-md);
+.bg-video--panel {
+  border-radius: inherit;
 }
 
 .media-panel__frame {

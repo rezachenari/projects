@@ -1,4 +1,5 @@
 import Reveal from '../ui/Reveal';
+import ScrollVideo from '../ui/ScrollVideo';
 
 const STATS = [
   { value: '۲۰+', label: 'سال روی زغال' },
@@ -9,6 +10,8 @@ const STATS = [
 export default function Story() {
   return (
     <section className="section section--mid story" id="story" aria-labelledby="story-title">
+      <ScrollVideo src="/videos/restaurant-interior.mp4" poster="/images/interior.webp" veil="soft" />
+
       <div className="container story__grid">
         <Reveal className="story__media">
           <img

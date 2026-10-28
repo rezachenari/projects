@@ -1,6 +1,6 @@
 import { Flame } from 'lucide-react';
 import Reveal from '../ui/Reveal';
-import BackgroundVideo from '../ui/BackgroundVideo';
+import ScrollVideo from '../ui/ScrollVideo';
 
 const STEPS = [
   {
@@ -20,7 +20,7 @@ const STEPS = [
 export default function Craft() {
   return (
     <section className="section section--dark craft" id="craft" aria-labelledby="craft-title">
-      <BackgroundVideo src="/videos/charcoal-grilling.mp4" poster="/images/grill.webp" veil="deep" />
+      <ScrollVideo src="/videos/charcoal-grilling.mp4" poster="/images/grill.webp" veil="deep" />
 
       <div className="container">
         <Reveal className="section-head craft__head">

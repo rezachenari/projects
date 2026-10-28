@@ -1,26 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Reveal from '../ui/Reveal';
+import ScrollVideo from '../ui/ScrollVideo';
 
 export default function Closing() {
   return (
     <section className="closing" aria-labelledby="closing-title">
-      <video
-        className="closing__video"
-        src="/videos/footer-closing.mp4"
-        poster="/images/closing.webp"
-        muted
-        loop
-        autoPlay
-        playsInline
-        preload="metadata"
-        aria-hidden="true"
-        onLoadedData={(event) => {
-          const promise = event.currentTarget.play();
-          if (promise && typeof promise.catch === 'function') promise.catch(() => {});
-        }}
-      />
-      <div className="closing__veil" aria-hidden="true" />
+      <ScrollVideo src="/videos/footer-closing.mp4" poster="/images/closing.webp" veil="deep" />
       <div className="container closing__inner">
         <Reveal className="closing__copy">
           <span className="eyebrow">تا دیدار بعد</span>

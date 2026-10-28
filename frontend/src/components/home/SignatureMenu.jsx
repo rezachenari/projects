@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Flame } from 'lucide-react';
 import DishCard from '../ui/DishCard';
 import Reveal from '../ui/Reveal';
-import BackgroundVideo from '../ui/BackgroundVideo';
+import ScrollVideo from '../ui/ScrollVideo';
 
 export default function SignatureMenu({ categories = [] }) {
   const [activeSlug, setActiveSlug] = useState(null);
@@ -15,7 +15,7 @@ export default function SignatureMenu({ categories = [] }) {
 
   return (
     <section className="section section--dark menu-section" id="menu" aria-labelledby="menu-title">
-      <BackgroundVideo src="/videos/signature-dishes.mp4" poster="/images/sig.webp" veil="deep" />
+      <ScrollVideo src="/videos/signature-dishes.mp4" poster="/images/sig.webp" veil="deep" />
 
       <div className="container">
         <Reveal className="section-head menu-section__head">

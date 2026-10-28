@@ -1,18 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * True scroll-driven video scrubbing for the hero.
+ * True scroll-driven video scrubbing.
  *
  * The displayed frame is a pure function of scroll position:
  *
- *   progress = clamp((scrollY - sectionTop) / travel, 0, 1)
+ *   progress = clamp(<section geometry> / travel, 0, 1)
  *   video.currentTime = progress * video.duration
  *
  * - Never calls play()/pause(): the video is a frame source, not a playback.
- * - One rAF loop, and only while the hero section is on screen.
+ * - One rAF loop, and only while the section is on screen.
  * - A single controller per <video> element (guarded via a WeakMap), so a
  *   remount or a StrictMode double-mount can never fight over the same video.
  * - Re-measures geometry on resize / orientation change / layout shifts.
+ *
+ * Two geometry modes:
+ * - `sticky`   (hero): a pinned stage; progress runs over the section's travel.
+ * - `traverse` (every other section): progress runs while the section crosses
+ *   the viewport, so no layout change (no sticky, no clipped content) is needed.
  */
 
 const MOBILE_QUERY = '(max-width: 900px)';
@@ -40,7 +45,14 @@ function isConstrainedConnection() {
   return Boolean(connection.saveData) || /(^|-)2g$/.test(connection.effectiveType || '');
 }
 
-export default function useScrollVideoScrub({ desktopSrc, mobileSrc, poster }) {
+export default function useScrollVideoScrub({
+  desktopSrc,
+  mobileSrc,
+  poster,
+  mode = 'sticky',
+  lazy = false,
+  progressVar = '--hero-progress',
+}) {
   const sectionRef = useRef(null);
   const stageRef = useRef(null);
   const videoRef = useRef(null);
@@ -49,10 +61,14 @@ export default function useScrollVideoScrub({ desktopSrc, mobileSrc, poster }) {
   // Save-data / very slow connections get the poster instead of a heavy scrub.
   const [constrained] = useState(isConstrainedConnection);
   const [videoSrc] = useState(() =>
-    typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches ? mobileSrc : desktopSrc,
+    mobileSrc && typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches
+      ? mobileSrc
+      : desktopSrc,
   );
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
+  // Lazy backdrops only attach their source once the section is approaching.
+  const [shouldLoad, setShouldLoad] = useState(() => !lazy);
 
   const scrubEnabled = !reducedMotion && !constrained && !videoFailed;
 
@@ -65,17 +81,43 @@ export default function useScrollVideoScrub({ desktopSrc, mobileSrc, poster }) {
     return () => media.removeEventListener('change', onChange);
   }, []);
 
+  // Attach the source shortly before the section reaches the viewport.
   useEffect(() => {
-    if (!scrubEnabled) return undefined;
+    if (!lazy || shouldLoad) return undefined;
+    const section = sectionRef.current;
+    if (!section || typeof IntersectionObserver === 'undefined') {
+      setShouldLoad(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '320px 0px', threshold: 0 },
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [lazy, shouldLoad]);
+
+  useEffect(() => {
+    if (!scrubEnabled || !shouldLoad) return undefined;
 
     const section = sectionRef.current;
     const stage = stageRef.current;
     const video = videoRef.current;
-    if (!section || !stage || !video) return undefined;
+    if (!section || !video) return undefined;
+    if (mode === 'sticky' && !stage) return undefined;
 
     // Never allow a second controller to drive the same element.
     if (controllers.has(video)) return undefined;
     controllers.set(video, true);
+
+    const target = mode === 'sticky' ? stage : section;
 
     let rafId = 0;
     let visible = false;
@@ -85,17 +127,21 @@ export default function useScrollVideoScrub({ desktopSrc, mobileSrc, poster }) {
     let lastApplied = -1;
     let queued = null;
 
-    stage.style.setProperty('--hero-progress', '0');
+    target.style.setProperty(progressVar, '0');
 
     const readDuration = () => {
       duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
     };
 
     const measure = () => {
-      const stickyTop = Number.parseFloat(getComputedStyle(stage).top) || 0;
-      startY = section.getBoundingClientRect().top + window.scrollY;
-      travel = Math.max(1, section.offsetHeight - stage.offsetHeight - stickyTop);
       readDuration();
+      startY = section.getBoundingClientRect().top + window.scrollY;
+      if (mode === 'sticky') {
+        const stickyTop = Number.parseFloat(getComputedStyle(stage).top) || 0;
+        travel = Math.max(1, section.offsetHeight - stage.offsetHeight - stickyTop);
+      } else {
+        travel = Math.max(1, window.innerHeight + section.offsetHeight);
+      }
     };
 
     const applyTime = (time) => {
@@ -111,7 +157,10 @@ export default function useScrollVideoScrub({ desktopSrc, mobileSrc, poster }) {
     };
 
     const progressAtScroll = () => {
-      const raw = (window.scrollY - startY) / travel;
+      const raw =
+        mode === 'sticky'
+          ? (window.scrollY - startY) / travel
+          : (window.innerHeight - (startY - window.scrollY)) / travel;
       if (!Number.isFinite(raw) || raw <= 0) return 0;
       return raw >= 1 ? 1 : raw;
     };
@@ -119,7 +168,7 @@ export default function useScrollVideoScrub({ desktopSrc, mobileSrc, poster }) {
     const tick = () => {
       rafId = 0;
       const progress = progressAtScroll();
-      stage.style.setProperty('--hero-progress', progress.toFixed(4));
+      target.style.setProperty(progressVar, progress.toFixed(4));
 
       if (duration > 0) {
         const tail = Math.max(0, duration - TAIL_EPSILON);
@@ -199,7 +248,7 @@ export default function useScrollVideoScrub({ desktopSrc, mobileSrc, poster }) {
 
     if (layoutObserver) {
       layoutObserver.observe(section);
-      layoutObserver.observe(stage);
+      if (stage) layoutObserver.observe(stage);
     }
 
     video.addEventListener('loadedmetadata', onLoadedMetadata);
@@ -233,7 +282,7 @@ export default function useScrollVideoScrub({ desktopSrc, mobileSrc, poster }) {
       window.removeEventListener('resize', onResize);
       window.removeEventListener('orientationchange', onResize);
     };
-  }, [scrubEnabled, videoFailed, videoSrc]);
+  }, [mode, progressVar, scrubEnabled, shouldLoad, videoFailed, videoSrc]);
 
   return {
     sectionRef,
@@ -242,6 +291,7 @@ export default function useScrollVideoScrub({ desktopSrc, mobileSrc, poster }) {
     poster,
     videoSrc,
     scrubEnabled,
+    shouldLoad,
     videoReady,
     videoFailed,
     handleVideoError: () => setVideoFailed(true),

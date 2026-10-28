@@ -1,12 +1,12 @@
 import { Clock, Phone, Users } from 'lucide-react';
 import Reveal from '../ui/Reveal';
-import BackgroundVideo from '../ui/BackgroundVideo';
+import ScrollVideo from '../ui/ScrollVideo';
 import ReservationForm from '../forms/ReservationForm';
 
 export default function ReservationSection({ settings }) {
   return (
     <section className="section section--dark reserve" id="reservation" aria-labelledby="reserve-title">
-      <BackgroundVideo src="/videos/reservation-cta.mp4" poster="/images/reservation.webp" veil="deep" />
+      <ScrollVideo src="/videos/reservation-cta.mp4" poster="/images/reservation.webp" veil="deep" />
 
       <div className="container reserve__grid">
         <Reveal className="reserve__info">
